@@ -1,4 +1,6 @@
 #include <Wire.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <LiquidCrystal_I2C.h>
@@ -11,9 +13,17 @@
 #define LED_MPU_PIN 4
 #define LED_VIBRATION_PIN 15
 
+// WiFi
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
+
+// ThingSpeak
+String thingSpeakApiKey = "SGZRZMAO84TK4UTV";
+const char* server = "http://api.thingspeak.com/update";
+
 // Sensors
 Adafruit_MPU6050 mpu;
-LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD at I2C address 0x27
+LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD address 0x27
 
 // Constants
 const float gravity = 9.8;
@@ -30,15 +40,25 @@ void setup() {
   pinMode(LED_MPU_PIN, OUTPUT);
   pinMode(LED_VIBRATION_PIN, OUTPUT);
 
-  Wire.begin(21, 22);  // ESP32 default I2C pins
+  Wire.begin(21, 22); // I2C for ESP32
 
-  // Initialize LCD
+  // LCD Init
   lcd.init();
   lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print("Initializing...");
 
-  // Initialize MPU6050
+  // WiFi Init
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi connected");
+  lcd.setCursor(0, 0);
+  lcd.print("WiFi Connected   ");
+
+  // MPU6050 Init
   if (!mpu.begin(0x68, &Wire)) {
     Serial.println("MPU6050 not found!");
     lcd.setCursor(0, 1);
@@ -97,5 +117,23 @@ void loop() {
     fabs(a.acceleration.z) > accelThreshold ? HIGH : LOW);
   digitalWrite(LED_VIBRATION_PIN, vibration > vibrationThreshold ? HIGH : LOW);
 
-  delay(15000);  // Delay between readings
-}
+  // Send to ThingSpeak
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    String url = server;
+    url += "?api_key=" + thingSpeakApiKey;
+    url += "&field1=" + String(distance);
+    url += "&field2=" + String(a.acceleration.x);
+    url += "&field3=" + String(a.acceleration.y);
+    url += "&field4=" + String(a.acceleration.z);
+    url += "&field5=" + String(vibration);
+
+    http.begin(url);
+    int httpResponseCode = http.GET();
+    Serial.print("ThingSpeak Code: ");
+    Serial.println(httpResponseCode);
+    http.end();
+  }
+
+  delay(15000);  // 15 seconds
+} 
