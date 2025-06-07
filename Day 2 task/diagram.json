@@ -41,6 +41,13 @@
       "left": 28.25,
       "rotate": 90,
       "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": -329.6,
+      "left": 92,
+      "attrs": { "pins": "i2c" }
     }
   ],
   "connections": [
@@ -65,7 +72,11 @@
     [ "esp:21", "imu1:SDA", "green", [ "h0" ] ],
     [ "esp:22", "imu1:SCL", "green", [ "h0" ] ],
     [ "imu1:GND", "esp:GND.1", "black", [ "v-28.8", "h57.68", "v134.4", "h-345.6", "v-86.4" ] ],
-    [ "imu1:VCC", "esp:3V3", "red", [ "v-163.2", "h-259.12", "v48" ] ]
+    [ "imu1:VCC", "esp:3V3", "red", [ "v-163.2", "h-259.12", "v48" ] ],
+    [ "lcd1:GND", "esp:GND.1", "black", [ "h-499.2", "v403.2" ] ],
+    [ "lcd1:VCC", "esp:3V3", "red", [ "h-489.6", "v259.3" ] ],
+    [ "lcd1:SDA", "esp:21", "green", [ "h-19.2", "v173", "h105.6", "v115.2", "h0", "v28.8" ] ],
+    [ "lcd1:SCL", "esp:22", "green", [ "h-9.6", "v153.9", "h134.4", "v115.2" ] ]
   ],
   "dependencies": {}
 }

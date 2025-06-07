@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
+#include <LiquidCrystal_I2C.h>
 #include <math.h>
 
 // Pin Definitions
@@ -12,6 +13,7 @@
 
 // Sensors
 Adafruit_MPU6050 mpu;
+LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD at I2C address 0x27
 
 // Constants
 const float gravity = 9.8;
@@ -28,15 +30,26 @@ void setup() {
   pinMode(LED_MPU_PIN, OUTPUT);
   pinMode(LED_VIBRATION_PIN, OUTPUT);
 
-  Wire.begin(21, 22);  // ESP32 I2C pins
+  Wire.begin(21, 22);  // ESP32 default I2C pins
+
+  // Initialize LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Initializing...");
 
   // Initialize MPU6050
   if (!mpu.begin(0x68, &Wire)) {
     Serial.println("MPU6050 not found!");
+    lcd.setCursor(0, 1);
+    lcd.print("MPU6050 Error    ");
     while (true);
   }
 
-  Serial.println("MPU6050 Ready");
+  lcd.setCursor(0, 1);
+  lcd.print("MPU6050 Ready    ");
+  delay(1000);
+  lcd.clear();
 }
 
 float readDistanceCM() {
@@ -61,12 +74,20 @@ void loop() {
 
   float vibration = fabs(accelMagnitude - gravity);
 
-  // Serial output
+  // LCD Output
+  lcd.setCursor(0, 0);
+  lcd.print("Dist:");
+  lcd.print(distance, 1);
+  lcd.print("cm   ");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Vib:");
+  lcd.print(vibration, 2);
+  lcd.print(" m/s2 ");
+
+  // Debug Serial
   Serial.print("Distance: "); Serial.print(distance);
-  Serial.print(" cm | Vibration: "); Serial.print(vibration);
-  Serial.print(" m/s^2 | Accel X: "); Serial.print(a.acceleration.x);
-  Serial.print(" Y: "); Serial.print(a.acceleration.y);
-  Serial.print(" Z: "); Serial.println(a.acceleration.z);
+  Serial.print(" | Vibration: "); Serial.println(vibration);
 
   // LED Logic
   digitalWrite(LED_DISTANCE_PIN, distance > distanceThreshold ? HIGH : LOW);
@@ -76,5 +97,5 @@ void loop() {
     fabs(a.acceleration.z) > accelThreshold ? HIGH : LOW);
   digitalWrite(LED_VIBRATION_PIN, vibration > vibrationThreshold ? HIGH : LOW);
 
-  delay(15000);  // 15 seconds delay
+  delay(15000);  // Delay between readings
 }
