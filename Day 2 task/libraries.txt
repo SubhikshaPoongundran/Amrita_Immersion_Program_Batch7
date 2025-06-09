@@ -1,0 +1,7 @@
+# Wokwi Library List
+# See https://docs.wokwi.com/guides/libraries
+
+MPU6050
+HC-SR04
+Adafruit MPU6050
+LiquidCrystal I2C
